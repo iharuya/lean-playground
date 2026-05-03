@@ -13,7 +13,7 @@ theorem taigu_1 (A B: Prop): (A → B) → (¬B → ¬A) := by
   apply banana
   apply apple
   exact coffee
-/--
+/-
 これでエディタが赤くならなくなった。これをGoalが閉じるとか、Type checkが通っているというらしい。
 intro, apply, exactって何？なんでこれが証明になっているの？
 introはこの場合3つ書くことが確定しているの？
@@ -44,3 +44,8 @@ theorem taigu_2 (A B: Prop): (A → B) → ((B → False) → (A → False)) := 
 だけど、なんでこれが証明になってるの？初めて帰納法を教わった時のような感覚。
 -/
 
+-- [tsでも似たようなことができるのを確認](./taigu.ts)したので、これはシンプルにこう書けることがわかった
+theorem taigu_3 (A B: Prop): (A → B) → (B → False) → (A → False) :=
+  fun hab hb ha => hb (hab ha)
+-- by introとかいうのはTacticといって、こういう生の証明関数が辛くなる時に活躍するマクロのようなもの
+-- 今回はむしろ生の証明がとても単純に終わったけど、Tacticの充実が証明支援システムに重要な役割を担っているのを感じた
