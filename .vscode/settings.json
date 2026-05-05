@@ -1,3 +1,7 @@
 {
   "editor.tabCompletion": "off",
+  "github.copilot.enable": {
+    "lean": false
+  },
+  "editor.inlineSuggest.enabled": false,
 }

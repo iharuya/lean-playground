@@ -45,7 +45,74 @@ theorem taigu_2 (A B: Prop): (A → B) → ((B → False) → (A → False)) := 
 -/
 
 -- [tsでも似たようなことができるのを確認](./taigu.ts)したので、これはシンプルにこう書けることがわかった
-theorem taigu_3 (A B: Prop): (A → B) → (B → False) → (A → False) :=
+theorem taigu_raw (A B: Prop): (A → B) → (B → False) → (A → False) :=
   fun hab hb ha => hb (hab ha)
 -- by introとかいうのはTacticといって、こういう生の証明関数が辛くなる時に活躍するマクロのようなもの
 -- 今回はむしろ生の証明がとても単純に終わったけど、Tacticの充実が証明支援システムに重要な役割を担っているのを感じた
+#print axioms taigu_raw -- どの公理も使っていない（CICが公理）
+
+
+/-
+とりあえず「なんでそれで証明になってるの？」という疑問は置いておいて、上の逆を示す
+Lean4では排中律を古典的公理ではなく、
+古典の公理を[choice](https://leanprover-community.github.io/mathlib4_docs/Init/Prelude.html#Classical.choice)としている。ZFCのCとは厳密には違うっぽいけど型理論を知ってないと理解できなそうな感じだった。
+排中律thorem Classical.em (p : Prop) : p ∨ ¬pは、Classical.ChoiceからDiaconescuの定理とやらで証明されるらしい。
+Leanでは他にpropext(外延性公理)とQuot.sound(商型の健全性公理)にも依存しているらしい
+それらの定義は以下のとおり：
+axiom Classical.choice {α : Sort u} : Nonempty α → α
+axiom propext {a b : Prop} : (a ↔ b) → a = b
+axiom sound : ∀ {α : Sort u} {r : α → α → Prop} {a b : α}, r a b → Quot.mk r a = Quot.mk r b
+よく分かんないけど、propextだけは「マジかそんなことも構成論理じゃ言えないの？」って思った。
+-/
+
+theorem taigu_gyaku_1 (A B : Prop): (¬B → ¬A) → (A → B) := by
+  intro h1
+  intro ha
+  have hem : B ∨ ¬B := Classical.em B -- haveの説明は後で
+  apply Or.elim hem -- ∨ がある命題を2つに分割する
+  ·
+    intro hb
+    exact hb -- この命題hbが真であることを提出
+  ·
+    intro hnb
+    have hna : ¬A := h1 hnb
+    -- haveとは、const hna = h1(hnb)みたいに結果を新た名前で前提に追加する操作のこと
+    -- これは1行だけだから明示性のためでしかないけど、複数行で := by ...と小さな証明問題を始める時に便利
+    have hfalse : False := hna ha
+    exact False.elim hfalse -- hFalse(矛盾)からはどんな命題（今回はB）も導ける
+    -- いまいちしっくりこないけど、まあそういうもんだと思うことにする
+#print axioms taigu_gyaku_1 -- propext, Classical.choice, Quot.sound
+#print axioms Or.elim -- no axioms
+#print axioms Classical.em -- propext, Classical.choice, Quot.sound
+
+-- だからTacticを使わないとこう書ける
+theorem taigu_gyaku_raw (A B : Prop): (¬B → ¬A) → (A → B) :=
+  fun h1 ha =>
+    Or.elim (Classical.em B)
+      (fun hb => hb)
+      (fun hnb => False.elim (h1 hnb ha))
+
+--　by_casesというTacticがあるが、
+-- Classicalを使っていないように見せかけて排中律まんま使ってる
+theorem taigu_gyaku_2 (A B: Prop): (¬B -> ¬A) → (A → B) := by
+  intro h1
+  intro ha
+  by_cases hb: B
+  .
+    exact hb
+  .
+    have hna: ¬A := h1 hb -- こちらの分岐でhbが¬Bになる
+    have hfalse: False := hna ha
+    exact False.elim hfalse
+#print axioms taigu_gyaku_2
+
+-- 矛盾も古典論理で、それを使うと見かけ上分岐なしで書ける
+theorem taigu_gyaku_3 (A B: Prop): (¬B → ¬A) → (A → B) := by
+  intro h1
+  intro ha
+  apply Classical.byContradiction -- GoalがBから ¬B → False になる
+  intro hnb
+  have hna : ¬A := h1 hnb
+  exact hna ha
+#print axioms taigu_gyaku_3
+#print axioms Classical.byContradiction
