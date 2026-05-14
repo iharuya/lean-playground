@@ -116,3 +116,4 @@ theorem taigu_gyaku_3 (A B: Prop): (¬B → ¬A) → (A → B) := by
   exact hna ha
 #print axioms taigu_gyaku_3
 #print axioms Classical.byContradiction
+

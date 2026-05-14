@@ -1,1 +1,1 @@
-import Playground.taigu
+-- lakefile.tomlにワイルドカードでインポートするものを指定する
