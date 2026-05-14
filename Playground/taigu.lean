@@ -49,7 +49,7 @@ theorem taigu_raw (A B: Prop): (A → B) → (B → False) → (A → False) :=
   fun hab hb ha => hb (hab ha)
 -- by introとかいうのはTacticといって、こういう生の証明関数が辛くなる時に活躍するマクロのようなもの
 -- 今回はむしろ生の証明がとても単純に終わったけど、Tacticの充実が証明支援システムに重要な役割を担っているのを感じた
-#print axioms taigu_raw -- どの公理も使っていない（CICが公理）
+-- #print axioms taigu_raw -- どの公理も使っていない（CICが公理）
 
 
 /-
@@ -81,9 +81,9 @@ theorem taigu_gyaku_1 (A B : Prop): (¬B → ¬A) → (A → B) := by
     have hfalse : False := hna ha
     exact False.elim hfalse -- hFalse(矛盾)からはどんな命題（今回はB）も導ける
     -- いまいちしっくりこないけど、まあそういうもんだと思うことにする
-#print axioms taigu_gyaku_1 -- propext, Classical.choice, Quot.sound
-#print axioms Or.elim -- no axioms
-#print axioms Classical.em -- propext, Classical.choice, Quot.sound
+-- #print axioms taigu_gyaku_1 -- propext, Classical.choice, Quot.sound
+-- #print axioms Or.elim -- no axioms
+-- #print axioms Classical.em -- propext, Classical.choice, Quot.sound
 
 -- だからTacticを使わないとこう書ける
 theorem taigu_gyaku_raw (A B : Prop): (¬B → ¬A) → (A → B) :=
@@ -104,7 +104,7 @@ theorem taigu_gyaku_2 (A B: Prop): (¬B -> ¬A) → (A → B) := by
     have hna: ¬A := h1 hb -- こちらの分岐でhbが¬Bになる
     have hfalse: False := hna ha
     exact False.elim hfalse
-#print axioms taigu_gyaku_2
+-- #print axioms taigu_gyaku_2
 
 -- 矛盾も古典論理で、それを使うと見かけ上分岐なしで書ける
 theorem taigu_gyaku_3 (A B: Prop): (¬B → ¬A) → (A → B) := by
@@ -114,6 +114,5 @@ theorem taigu_gyaku_3 (A B: Prop): (¬B → ¬A) → (A → B) := by
   intro hnb
   have hna : ¬A := h1 hnb
   exact hna ha
-#print axioms taigu_gyaku_3
-#print axioms Classical.byContradiction
-
+-- #print axioms taigu_gyaku_3
+-- #print axioms Classical.byContradiction
