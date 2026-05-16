@@ -4,7 +4,7 @@ import Mathlib.Tactic.Tauto
 -- #print Set -- Set α とは、 α → Propのこと Typeが何かよくわからないけど.
 example {α : Type} : Set α = (α → Prop) := by rfl
 
-variable {α : Type} (A B C : Set α)
+variable {α : Type} (A B C D E F : Set α)
 
 theorem inter_subset_left : A ∩ B ⊆ A := by
   intro x hx
@@ -239,3 +239,84 @@ theorem demorgan_intersection : (A ∩ B)ᶜ = Aᶜ ∪ Bᶜ := by
   · apply subset_compl_inter
   · apply compl_inter_subset
 
+----------
+-- ルベーグ可測集合が共通部分で閉じている証明の中で使うやつ
+----------
+example : (A \ (E ∩ F)) ∩ E = (A ∩ E) \ F := by
+  ext x
+  constructor
+  · intro ⟨⟨hA, hNotEF⟩,  hE⟩
+    constructor
+    · exact And.intro hA hE
+    · intro hF
+      have hEF := And.intro hE hF
+      exact hNotEF hEF
+  · intro ⟨⟨hA, hE⟩, hNotF⟩
+    constructor
+    · constructor
+      · exact hA
+      · intro hEF
+        exact hNotF hEF.right
+    · exact hE
+/-
+手書きの証明では、 x ∈ A \ (E ∩ F) ∩ E から代数的に同値変形という計算を
+していって、最終的に x ∈ (A ∩ E) \ F までが同値で結ばれることを証明とするが
+上のLean的証明は推移規則に従った木構造を構成することで証明としている
+これを自然演繹というらしい。
+手書きでは共通部分のドモルガンを使ったから排中律依存だけど、自然演繹を使うと
+実は不要であることがわかった
+calcを使うと手書きの証明と同じようにできる。明らかな変形はtautoして示す。
+-/
+example : x ∈ (A \ (E ∩ F)) ∩ E ↔ x ∈ (A ∩ E) \ F := by
+  calc
+    x ∈ (A \ (E ∩ F)) ∩ E
+      ↔ (x ∈ A ∧ ¬(x ∈ E ∧ x ∈ F)) ∧ x ∈ E := by rfl
+    -- ドモルガンを使う
+    _ ↔ (x ∈ A ∧ (¬ x ∈ E ∨ ¬ x ∈ F)) ∧ x ∈ E := by rw [not_and_or]
+    -- 順番を変える（結合・交換則）
+    _ ↔ (x ∈ A ∧ x ∈ E) ∧ (¬ x ∈ E ∨ ¬ x ∈ F) := by tauto
+    -- 分配法則と矛盾 (E ∧ ¬E) の除去
+    _ ↔ x ∈ A ∧ x ∈ E ∧ ¬ x ∈ F := by tauto
+    -- Leanは∧を右結合で評価するが、右辺に合わないので結合の順番を変える
+    _ ↔ (x ∈ A ∧ x ∈ E) ∧ ¬ x ∈ F := by tauto
+    _ ↔ x ∈ (A ∩ E) \ F := by rfl
+-- このように手書きと同じようにできるけど
+-- InfoViewが無意味で証明支援されている感じがしない
+---
+example : (A \ (E ∩ F)) \ E = A \ E := by
+  ext x
+  constructor
+  · intro ⟨⟨hA, hNotEF⟩, hNotE⟩
+    exact And.intro hA hNotE
+  · intro ⟨hA, hNotE⟩
+    constructor
+    · constructor
+      · exact hA
+      · intro hEF
+        exact hNotE hEF.left
+    · exact hNotE
+-- これを手書きと同じようにするために、吸収律を作っておく
+theorem my_absorption (P Q : Prop) : P ∧ (P ∨ Q) ↔ P := by
+  constructor
+  · intro h
+    exact h.left
+  · intro hP
+    constructor
+    · exact hP
+    · exact Or.inl hP
+example (P Q : Prop) : P ∧ (P ∨ Q) ↔ P :=
+  Iff.intro
+    (fun h => h.left)
+    (fun hP => And.intro hP (Or.inl hP))
+-- ⟨ ⟩ を使えば1行でもかける！
+example (P Q : Prop) : P ∧ (P ∨ Q) ↔ P :=
+  ⟨fun h => h.left, fun hP => ⟨hP, Or.inl hP⟩⟩
+example : x ∈ (A \ (E ∩ F)) \ E ↔ x ∈ A \ E := by
+  calc
+    x ∈ (A \ (E ∩ F)) \ E
+      ↔ (x ∈ A ∧ ¬(x ∈ E ∧ x ∈ F)) ∧ ¬x ∈ E := by rfl
+    _ ↔ (x ∈ A ∧ (¬x ∈ E ∨ ¬x ∈ F)) ∧ ¬x ∈ E := by rw [not_and_or]
+    _ ↔ x ∈ A ∧ ¬x ∈ E ∧ (¬x ∈ E ∨ ¬x ∈ F) := by tauto
+    -- 吸収律もTautoで行けるけど明示的にしたい
+    _ ↔  x ∈ A ∧ ¬x ∈ E := by rw [my_absorption]
+    _ ↔ x ∈ A \ E := by rfl
