@@ -17,3 +17,7 @@ rev = "v4.30.0-rc2"
 [[lean_lib]]
 name = "Playground"
 globs = ["Playground.**"]
+
+[[lean_exe]]
+name = "mycli"
+root = "Playground.Cli"
