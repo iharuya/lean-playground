@@ -77,7 +77,6 @@ def HandSet.winningHand? (s : HandSet) : Option Hand :=
   | true,  false, true  => some .paper
   | _,     _,     _     => none
 
-/-- 実装（O(N) の1パス集計による勝者判定） -/
 def winningHand? (hands : List Hand) : Option Hand :=
   (HandSet.ofList hands).winningHand?
 
