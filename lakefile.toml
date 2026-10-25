@@ -19,5 +19,9 @@ name = "Playground"
 globs = ["Playground.**"]
 
 [[lean_exe]]
-name = "mycli"
-root = "Playground.Cli"
+name = "janken"
+root = "Playground.Janken"
+
+[[lean_exe]]
+name = "multi-janken"
+root = "Playground.MultiJanken"
