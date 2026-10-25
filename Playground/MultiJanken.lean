@@ -27,7 +27,7 @@ def Hand.beats : Hand → Hand → Bool
   | _,         _         => false
 
 /--
-仕様（総当たり定義）：
+勝ちの定義（仕様）：
 手 `h` が場（`hands`）における勝ち手であるとは、
 1. `h` 自身が場に出ている
 2. 場に出ている手のうち、少なくとも1つに勝っている
@@ -123,10 +123,9 @@ theorem isWinningHandSpec_eq_ofList (hands : List Hand) (h : Hand) :
     HandSet.contains_ofList, HandSet.any_ofList, HandSet.all_ofList]
 
 /--
-仕様とO(N)実装の一致
-何人のじゃんけんであっても、
-1パス集計 `winningHand?` が `some h` を返すことと、
-総当たり仕様 `isWinningHandSpec` を `h` が満たすことは同値。
+何人でじゃんけんしても、手`h`が
+HandSetを利用した（効率的な）実装で勝利と返すことと、
+仕様（を愚直に実装したら全探索を要する）によって勝利と判定されることは同値
 -/
 theorem winningHand?_eq_some_iff (hands : List Hand) (h : Hand) :
     winningHand? hands = some h ↔ isWinningHandSpec hands h = true := by
@@ -136,8 +135,7 @@ theorem winningHand?_eq_some_iff (hands : List Hand) (h : Hand) :
 
 /--
 勝者の単一性
-何人でじゃんけんをしても、総当たり仕様を満たす「勝ち手」は高々1種類しか存在しない。
-（例：グーを出した人とチョキを出した人が同時に勝者にならない）
+Xを出した人とYを出した人が両方勝者ならばX=Y
 -/
 theorem winning_hand_unique (hands : List Hand) (h₁ h₂ : Hand)
     (hw₁ : isWinningHandSpec hands h₁ = true)
@@ -147,7 +145,7 @@ theorem winning_hand_unique (hands : List Hand) (h₁ h₂ : Hand)
   injection hw₂
 
 /--
-全員同じ手なら何人でも必ずあいこ
+全員同じ手なら必ずあいこ
 -/
 theorem replicate_is_draw (n : Nat) (h : Hand) :
     winningHand? (List.replicate n h) = none := by
@@ -176,7 +174,7 @@ theorem three_way_tie (hands : List Hand)
 
 /--
 順列不変性・公平性
-参加者の並び順をどのように入れ替えても（`List.Perm`）判定結果は変わらない
+参加者の並び順をどのように入れ替えても判定結果は変わらない
 -/
 theorem winningHand?_perm_invariant {hands₁ hands₂ : List Hand}
     (hp : hands₁.Perm hands₂) :
@@ -195,6 +193,18 @@ theorem winningHand?_perm_invariant {hands₁ hands₂ : List Hand}
   simp [winningHand?, h_eq]
 
 end MultiJanken
+
+/-
+N人じゃんけんにおいて`List Hand`は無限通りで全探索はできないため、
+2^3 = 8状態の `HandSet` に還元（商集合化）し、還元後の有限状態空間（`HandSet` と `Hand`）を `cases` で総当たりする検証している。
+
+この仕様（`isWinningHandSpec`）から実装（`winningHand?`）への変形の同値性をLeanでは明示的な定理として機械検証できる。ただし今回これは人間にとっても直感的に認められることである：
+
+「場に出たのが3種類か1種類ならあいこ、2種類の時だけどちらが勝利か判定すれば済むからSetを使おう」
+と、普通のプログラミング（ref: ./MultiJanken.ts）ではその同値性を暗黙の了解として短く実装し、テストもほぼ不要とされるだろう。今回の問題をLeanで取り組むのはオーバーエンジニアリングだったが、直感に思えた同値性を信じ込む恐ろしさ・本当に証明しようと思ったらこうやってできるという凄さを実感できた。
+
+直感では通用しない領域でLeanを活用する例は別の機会に譲る。
+-/
 
 open MultiJanken in
 def main (args : List String) : IO UInt32 := do
